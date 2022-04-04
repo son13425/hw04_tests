@@ -13,13 +13,13 @@ class PostURLTests(TestCase):
         super().setUpClass()
         cls.user = User.objects.create_user(username='auth')
         cls.group = Group.objects.create(
-            title = 'Тестовая группа',
-            slug = 'test-slug',
-            description = 'Тестовое описание',
+            title='Тестовая группа',
+            slug='test-slug',
+            description='Тестовое описание',
         )
         cls.post = Post.objects.create(
-            author = cls.user,
-            text = 'Тестовый пост',
+            author=cls.user,
+            text='Тестовый пост',
         )
 
     def setUp(self):
@@ -27,7 +27,6 @@ class PostURLTests(TestCase):
         self.user = User.objects.create_user(username='testnoname')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-
 
     def test_pages_is_available_to_everyone(self):
         """Страницы доступны любому пользователю."""
@@ -41,12 +40,12 @@ class PostURLTests(TestCase):
             with self.subTest(code=code):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, code)
-    
+
     def test_pages_is_only_authorized(self):
         """Страница /create/ доступна авторизованному пользователю."""
         response = self.authorized_client.get('/create/')
         self.assertEqual(response.status_code, 200)
-    
+
     def test_pages_is_only_author(self):
         """Страница /posts/<post_id>/edit/ доступна автору."""
         if self.authorized_client.force_login(self.user) == self.post.author:
@@ -65,7 +64,8 @@ class PostURLTests(TestCase):
            на страницу поста если он не автор.
         """
         if self.authorized_client.force_login(self.user) != self.post.author:
-            response = self.authorized_client.get('/posts/1/edit/', follow=True)
+            response = self.authorized_client.get(
+                '/posts/1/edit/', follow=True)
             self.assertRedirects(response, '/profile/testnoname/')
 
     def test_url_everyone_uses_correct_template(self):
@@ -76,7 +76,7 @@ class PostURLTests(TestCase):
             '/profile/auth/': 'posts/profile.html',
             '/posts/1/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
-            '/unexisting_page/': '404.html',            
+            '/unexisting_page/': '404.html',
         }
         for address, template in urls_template.items():
             with self.subTest(template=template):
@@ -84,7 +84,7 @@ class PostURLTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_url_authorized_uses_correct_template(self):
-        """Проверка шаблонов для адресов, доступных только 
+        """Проверка шаблонов для адресов, доступных только
            автору.
         """
         if self.authorized_client.force_login(self.user) == self.post.author:

@@ -16,8 +16,7 @@ class AboutPagesTests(TestCase):
             with self.subTest(code=code):
                 response = self.guest_client.get(address)
                 self.assertEqual(response.status_code, code)
-    
-    
+
     def test_url_uses_correct_template(self):
         """Проверка шаблонов для адресов."""
         urls_template = {

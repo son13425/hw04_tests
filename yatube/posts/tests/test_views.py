@@ -16,29 +16,29 @@ class PostPagesTests(TestCase):
         super().setUpClass()
         cls.user = User.objects.create_user(username='testname')
         cls.group = Group.objects.create(
-            title = 'Тестовая группа',
-            slug = 'test-slug',
-            description = 'Тестовое описание',
+            title='Тестовая группа',
+            slug='test-slug',
+            description='Тестовое описание',
         )
         number_posts = 13
         for posts_num in range(number_posts):
             time.sleep(0.1)
             cls.post = Post.objects.create(
-                author = cls.user,
-                text = 'Тестовый пост %s' %posts_num,
-                group = cls.group,
+                author=cls.user,
+                text='Тестовый пост %s' % posts_num,
+                group=cls.group,
             )
         cls.group2 = Group.objects.create(
-            title = 'Тестовая группа 2',
-            slug = 'test-slug2',
-            description = 'Тестовое описание 2',
+            title='Тестовая группа 2',
+            slug='test-slug2',
+            description='Тестовое описание 2',
         )
         time.sleep(0.1)
         cls.post = Post.objects.create(
-                author = cls.user,
-                text = 'Тестовый пост 2 группы',
-                group = cls.group2,
-            )
+            author=cls.user,
+            text='Тестовый пост 2 группы',
+            group=cls.group2,
+        )
 
     def setUp(self):
         self.user = User.objects.create_user(username='noname')
@@ -50,13 +50,13 @@ class PostPagesTests(TestCase):
         templates_pages_names = {
             'posts/index.html': reverse('posts:index'),
             'posts/group_list.html': reverse(
-                'posts:group_posts', 
+                'posts:group_posts',
                 kwargs={'slug': 'test-slug'}),
             'posts/profile.html': reverse(
-                'posts:profile', 
+                'posts:profile',
                 kwargs={'username': 'testname'}),
             'posts/post_detail.html': reverse(
-                'posts:post_detail', 
+                'posts:post_detail',
                 kwargs={'post_id': '1'}),
             'posts/create_post.html': reverse('posts:post_create'),
         }
@@ -70,7 +70,7 @@ class PostPagesTests(TestCase):
         если пользователь - автор.
         """
         if self.authorized_client.force_login(self.user) == self.post.author:
-            templates_pages_names = {                        
+            templates_pages_names = {
                 'posts/create_post.html': reverse(
                     'posts:post_edit',
                     kwargs={'post_id': '1'}),
@@ -82,7 +82,7 @@ class PostPagesTests(TestCase):
 
     def test_list_page_show_correct_context(self):
         """Шаблоны сформированы с правильным контекстом."""
-        """Пост с группой появляется на страницах: главная,профиль,группа."""     
+        """Пост с группой появляется на страницах: главная,профиль,группа."""
         views_objects = {
             reverse
             ('posts:index'): 'page_obj',
@@ -104,14 +104,14 @@ class PostPagesTests(TestCase):
 
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
-        response = (self.authorized_client.
-            get(reverse('posts:post_detail', kwargs={'post_id': '1'})))
-        self.assertEqual(response.context.
-                            get('post').author.username, 'testname')
-        self.assertEqual(response.context.
-                            get('post').text, 'Тестовый пост 0')
-        self.assertEqual(response.context.
-                            get('post').group.title, 'Тестовая группа')
+        response = (self.authorized_client.get(
+            reverse('posts:post_detail', kwargs={'post_id': '1'})))
+        self.assertEqual(
+            response.context.get('post').author.username, 'testname')
+        self.assertEqual(
+            response.context.get('post').text, 'Тестовый пост 0')
+        self.assertEqual(
+            response.context.get('post').group.title, 'Тестовая группа')
 
     def test_create_post_page_show_correct_context(self):
         """Шаблон create_post сформирован с правильным контекстом."""

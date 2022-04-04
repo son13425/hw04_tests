@@ -16,14 +16,14 @@ class PostFormTests(TestCase):
         super().setUpClass()
         cls.user = User.objects.create_user(username='username')
         cls.group = Group.objects.create(
-            title = 'Тестовая группа',
-            slug = 'test-slug',
-            description = 'Тестовое описание',
+            title='Тестовая группа',
+            slug='test-slug',
+            description='Тестовое описание',
         )
         cls.post = Post.objects.create(
-            author = cls.user,
-            text = 'Тестовый пост',
-            group = cls.group,
+            author=cls.user,
+            text='Тестовый пост',
+            group=cls.group,
         )
         cls.form = PostForm()
 
@@ -54,13 +54,13 @@ class PostFormTests(TestCase):
         if self.authorized_client.force_login(self.user) == self.post.author:
             posts_count = Post.objects.count()
             form_data = {
-            'text': 'Новый Тестовый пост',
-            'group': self.group.id,
+                'text': 'Новый Тестовый пост',
+                'group': self.group.id,
             }
             post_edit = self.authorized_client.post(
-            reverse('posts:post_edit', kwargs={'post_id': '1'}),
-            data=form_data,
-            follow=True
+                reverse('posts:post_edit', kwargs={'post_id': '1'}),
+                data=form_data,
+                follow=True
             )
             self.assertEqual(post_edit.status_code, 200)
             time.sleep(0.1)

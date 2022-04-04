@@ -16,7 +16,7 @@ class PostModelTest(TestCase):
             slug='Тестовый слаг',
             description='Тестовое описание',
         )
-        cls.post=Post.objects.create(
+        cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовая пост',
         )

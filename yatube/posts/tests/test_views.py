@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.urls import reverse
 from django import forms
-import time
 
 from ..models import Post, Group
 
@@ -14,7 +13,8 @@ class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='testname')
+        cls.user = User.objects.create_user(username='noname')
+        cls.author = User.objects.create_user(username='testname')
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test-slug',
@@ -22,9 +22,8 @@ class PostPagesTests(TestCase):
         )
         number_posts = 13
         for posts_num in range(number_posts):
-            time.sleep(0.1)
             cls.post = Post.objects.create(
-                author=cls.user,
+                author=cls.author,
                 text='Тестовый пост %s' % posts_num,
                 group=cls.group,
             )
@@ -33,17 +32,17 @@ class PostPagesTests(TestCase):
             slug='test-slug2',
             description='Тестовое описание 2',
         )
-        time.sleep(0.1)
         cls.post = Post.objects.create(
-            author=cls.user,
+            author=cls.author,
             text='Тестовый пост 2 группы',
             group=cls.group2,
         )
 
     def setUp(self):
-        self.user = User.objects.create_user(username='noname')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        self.authorized_author = Client()
+        self.authorized_author.force_login(self.author)
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""

@@ -3,7 +3,6 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from http import HTTPStatus
 
-from .. import views
 from ..models import Post, Group
 
 
@@ -37,7 +36,7 @@ class PostURLTests(TestCase):
         """Страницы доступны любому пользователю."""
         urls_status_code = (
             reverse('posts:index'),
-            reverse('posts:group_posts', kwargs={'slug': self.group.slug}), 
+            reverse('posts:group_posts', kwargs={'slug': self.group.slug}),
             reverse('posts:profile', kwargs={'username': self.user.username}),
             reverse('posts:post_detail', kwargs={'post_id': self.post.id}),
         )

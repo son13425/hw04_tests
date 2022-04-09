@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from yatube.settings import NUMBER_OF_POSTS_PER_PAGE
+
 from .forms import PostForm
 from .models import Group, Post, User
 
@@ -32,7 +33,7 @@ def index(request):
 def group_posts(request, slug):
     template = 'posts/group_list.html'
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.all()
+    posts = group.posts.all()
     context = {
         'group': group,
         'posts': posts,

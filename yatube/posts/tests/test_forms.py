@@ -1,11 +1,10 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
-from django.urls import reverse
 from http import HTTPStatus
-import time
 
-from ..forms import PostForm
-from ..models import Post, Group
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..models import Group, Post
 
 
 User = get_user_model()
@@ -29,6 +28,7 @@ class PostFormTests(TestCase):
         )
 
     def setUp(self):
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
         self.authorized_author = Client()
@@ -47,25 +47,43 @@ class PostFormTests(TestCase):
             follow=True
         )
         self.assertEqual(post_create.status_code, HTTPStatus.OK)
-        time.sleep(0.1)
         posts_count2 = Post.objects.count()
         self.assertEqual(posts_count2, posts_count + 1)
+        # проверяем корректность заполненых полей созданого поста
+        new_post = Post.objects.first()
+        self.assertEqual(new_post.author.username, self.user.username)
+        self.assertEqual(new_post.text, form_data['text'])
+        self.assertEqual(new_post.group.title, self.group.title)
 
     def test_edit_post(self):
         """Валидная форма редактирует запись в Post."""
         posts_count = Post.objects.count()
         form_data = {
-            'text': 'Новый Тестовый',
+            'text': 'Новый Тестовый пост',
             'group': self.group.id,
         }
         post_edit = self.authorized_author.post(
-            reverse('posts:post_edit', kwargs={'post_id': '1'}),
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
             data=form_data,
             follow=True
         )
         self.assertEqual(post_edit.status_code, HTTPStatus.OK)
-        time.sleep(0.1)
         posts_count2 = Post.objects.count()
         self.assertEqual(posts_count2, posts_count)
-        post_2 = Post.objects.get(id=1)
-        self.assertEqual(post_2, 'Новый Тестовый')
+        post_2 = Post.objects.get(id=self.post.id)
+        self.assertEqual(post_2.text, form_data['text'])
+
+    def test_anonymous_cannot_publish_post(self):
+        posts_count = Post.objects.count()
+        form_data = {
+            'text': 'Тестовый пост 3',
+            'group': self.group.id,
+        }
+        post_create = self.guest_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
+        )
+        posts_count2 = Post.objects.count()
+        self.assertEqual(posts_count2, posts_count)
+        self.assertRedirects(post_create, '/auth/login/?next=/create/')

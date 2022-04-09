@@ -1,9 +1,10 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
-from django.urls import reverse
 from http import HTTPStatus
 
-from ..models import Post, Group
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..models import Group, Post
 
 
 User = get_user_model()
@@ -31,7 +32,7 @@ class PostURLTests(TestCase):
         self.authorized_client.force_login(self.user)
         self.authorized_author = Client()
         self.authorized_author.force_login(self.author)
-        
+
     def test_pages_is_available_to_everyone(self):
         """Страницы доступны любому пользователю."""
         urls_status_code = (

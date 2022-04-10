@@ -65,7 +65,10 @@ class PostURLTests(TestCase):
         response = self.guest_client.get(
             reverse('posts:post_create'), follow=True
         )
-        self.assertRedirects(response, '/auth/login/?next=/create/')
+        login_redirect = reverse('users:login')
+        create_redirect = reverse('posts:post_create')
+        expected_redirect = f'{login_redirect}?next={create_redirect}'
+        self.assertRedirects(response, expected_redirect)
 
     def test_post_edit_url_redirect_not_author(self):
         """Страница /posts/<post_id>/edit/ перенаправляет пользователя

@@ -6,7 +6,6 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 from django.contrib import admin
 from django.urls import include, path
 
-
 urlpatterns = [
     path('', include('posts.urls', namespace='posts')),
     path('admin/', admin.site.urls),
@@ -16,4 +15,4 @@ urlpatterns = [
 ]
 
 
-handler404 = 'core.views.page_not_found'
+handler404 = "yatube.views.page_not_found_view"

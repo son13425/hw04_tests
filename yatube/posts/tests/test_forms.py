@@ -86,4 +86,7 @@ class PostFormTests(TestCase):
         )
         posts_count2 = Post.objects.count()
         self.assertEqual(posts_count2, posts_count)
-        self.assertRedirects(post_create, '/auth/login/?next=/create/')
+        login_redirect = reverse('users:login')
+        create_redirect = reverse('posts:post_create')
+        expected_redirect = f'{login_redirect}?next={create_redirect}'
+        self.assertRedirects(post_create, expected_redirect)

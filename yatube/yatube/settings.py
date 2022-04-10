@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'core.apps.CoreConfig',
     'about.apps.AboutConfig',
+    'sorl.thumbnail',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +143,6 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 
 NUMBER_OF_POSTS_PER_PAGE = 10
+
+
+CSRF_FAILURE_VIEW = 'core.views.csrf_failure'

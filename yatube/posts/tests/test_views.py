@@ -173,28 +173,29 @@ class PostPagesTests(TestCase):
             for posts_num in range(number_posts)
         )
         N = NUMBER_OF_POSTS_PER_PAGE
-        # cоздан пагинатор для всех постов на странице
-        paginator1 = Paginator(Post.objects.all(), N)
-        # число страниц (int)
-        number_pages1 = paginator1.num_pages
-        # получена последняя страница
-        page_end1 = paginator1.page(number_pages1)
-        # посчитано количество постов на последней странице
-        n1 = page_end1.object_list.count()
-
-        group = get_object_or_404(Group, slug=self.group.slug)
-        posts_group = group.posts.all()
-        paginator2 = Paginator(posts_group, N)
-        number_pages2 = paginator2.num_pages
-        page_end2 = paginator2.page(number_pages2)
-        n2 = page_end2.object_list.count()
-
-        author = get_object_or_404(User, username=self.user.username)
-        posts_author = author.author_posts.all()
-        paginator3 = Paginator(posts_author, N)
-        number_pages3 = paginator3.num_pages
-        page_end3 = paginator3.page(number_pages3)
-        n3 = page_end3.object_list.count()
+        lists_posts = [
+            Post.objects.all(),
+            get_object_or_404(Group, slug=self.group.slug).posts.all(),
+            get_object_or_404(
+                User,
+                username=self.user.username
+            ).author_posts.all()
+        ]
+        n_number = []
+        number_pages_number = []
+        for i in lists_posts:
+            # cоздан пагинатор для всех постов на странице
+            paginator = Paginator(i, N)
+            # число страниц (int)
+            number_pages = paginator.num_pages
+            number_pages_number.append(number_pages)
+            # получена последняя страница
+            page_end = paginator.page(number_pages)
+            # посчитано количество постов на последней странице
+            n = page_end.object_list.count()
+            n_number.append(n)
+        n1, n2, n3 = n_number
+        num_pag1, num_pag2, num_pag3 = number_pages_number
         address_list = {
             reverse('posts:index'): N,
             reverse(
@@ -205,15 +206,15 @@ class PostPagesTests(TestCase):
                 'posts:profile',
                 kwargs={'username': self.user.username}
             ): N,
-            reverse('posts:index') + f'?page={number_pages1}': n1,
+            reverse('posts:index') + f'?page={num_pag1}': n1,
             reverse(
                 'posts:group_posts',
                 kwargs={'slug': self.group.slug}
-            ) + f'?page={number_pages2}': n2,
+            ) + f'?page={num_pag2}': n2,
             reverse(
                 'posts:profile',
                 kwargs={'username': self.user.username}
-            ) + f'?page={number_pages3}': n3,
+            ) + f'?page={num_pag3}': n3,
         }
         for address, list in address_list.items():
             with self.subTest(list=list):

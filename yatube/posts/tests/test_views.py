@@ -1,6 +1,7 @@
+import math
+
 from django import forms
 from django.contrib.auth import get_user_model
-from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -160,7 +161,7 @@ class PostPagesTests(TestCase):
         self.assertNotEqual(post_group_0, self.group.title)
         self.assertNotEqual(post_text_0, self.post1.text)
 
-    def test_first_page_contains_ten_records(self):
+    def test_paginator_provides_required_number_articles(self):
         """паджинатор обеспечивает требуемое количество записей
         на странице."""
         number_posts = 15
@@ -184,15 +185,15 @@ class PostPagesTests(TestCase):
         n_number = []
         number_pages_number = []
         for i in lists_posts:
-            # cоздан пагинатор для всех постов на странице
-            paginator = Paginator(i, N)
+            all_posts = i.count()
             # число страниц (int)
-            number_pages = paginator.num_pages
+            number_pages = math.ceil(all_posts / N)
+            # номер последней страницы внесен в список
             number_pages_number.append(number_pages)
-            # получена последняя страница
-            page_end = paginator.page(number_pages)
-            # посчитано количество постов на последней странице
-            n = page_end.object_list.count()
+            # посчитано требуемое количество постов на последней странице
+            n = all_posts - math.floor(all_posts / N) * N
+            # требуемое количество постов на последней странице
+            # внесено в список
             n_number.append(n)
         n1, n2, n3 = n_number
         num_pag1, num_pag2, num_pag3 = number_pages_number

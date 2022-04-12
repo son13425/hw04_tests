@@ -2,7 +2,6 @@ import math
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -161,42 +160,33 @@ class PostPagesTests(TestCase):
         self.assertNotEqual(post_group_0, self.group.title)
         self.assertNotEqual(post_text_0, self.post1.text)
 
-    def test_paginator_provides_required_number_articles(self):
-        """паджинатор обеспечивает требуемое количество записей
-        на странице."""
-        number_posts = 15
-        Post.objects.bulk_create(
+
+class PaginatorViewsTests(TestCase):
+    def setUp(self):
+        self.number_posts = 15
+        self.user = User.objects.create_user(username='noname')
+        self.group = Group.objects.create(
+            title='Тестовая группа',
+            slug='test-slug',
+            description='Тестовое описание',
+        )
+        self.posts = Post.objects.bulk_create(
             Post(
                 author=self.user,
                 group=self.group,
                 text='Тестовый пост %s' % posts_num,
             )
-            for posts_num in range(number_posts)
+            for posts_num in range(self.number_posts)
         )
+
+    def test_paginator_provides_required_number_articles(self):
+        """паджинатор обеспечивает требуемое количество записей
+        на странице."""
         N = NUMBER_OF_POSTS_PER_PAGE
-        lists_posts = [
-            Post.objects.all(),
-            get_object_or_404(Group, slug=self.group.slug).posts.all(),
-            get_object_or_404(
-                User,
-                username=self.user.username
-            ).author_posts.all()
-        ]
-        n_number = []
-        number_pages_number = []
-        for i in lists_posts:
-            all_posts = i.count()
-            # число страниц (int)
-            number_pages = math.ceil(all_posts / N)
-            # номер последней страницы внесен в список
-            number_pages_number.append(number_pages)
-            # посчитано требуемое количество постов на последней странице
-            n = all_posts - math.floor(all_posts / N) * N
-            # требуемое количество постов на последней странице
-            # внесено в список
-            n_number.append(n)
-        n1, n2, n3 = n_number
-        num_pag1, num_pag2, num_pag3 = number_pages_number
+        # число страниц (int)
+        number_pages = math.ceil(self.number_posts / N)
+        # требуемое количество постов на последней странице
+        n = self.number_posts - math.floor(self.number_posts / N) * N
         address_list = {
             reverse('posts:index'): N,
             reverse(
@@ -207,15 +197,15 @@ class PostPagesTests(TestCase):
                 'posts:profile',
                 kwargs={'username': self.user.username}
             ): N,
-            reverse('posts:index') + f'?page={num_pag1}': n1,
+            reverse('posts:index') + f'?page={number_pages}': n,
             reverse(
                 'posts:group_posts',
                 kwargs={'slug': self.group.slug}
-            ) + f'?page={num_pag2}': n2,
+            ) + f'?page={number_pages}': n,
             reverse(
                 'posts:profile',
                 kwargs={'username': self.user.username}
-            ) + f'?page={num_pag3}': n3,
+            ) + f'?page={number_pages}': n,
         }
         for address, list in address_list.items():
             with self.subTest(list=list):

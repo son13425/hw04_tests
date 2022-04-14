@@ -30,6 +30,11 @@ class Post(models.Model):
         verbose_name='Группа',
         help_text='Группа'
     )
+    image = models.ImageField(
+        'Картинка',
+        upload_to='posts/',
+        blank=True
+    )
 
     class Meta:
         ordering = ['-pub_date']
@@ -57,3 +62,37 @@ class Group(models.Model):
 
     def __str__(self) -> str:
         return f'{self.title}'
+
+
+class Comment(models.Model):
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Коментируемый пост',
+        help_text='Коментируемый пост'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор комментария',
+        help_text='Автор комментария'
+    )
+    text = models.TextField(
+        verbose_name='Текст комментария',
+        help_text='Текст комментария'
+    )
+    created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата и время публикации комментария'
+    )
+    active = models.BooleanField(
+        default=True
+    )
+
+    class Meta:
+        ordering = ['-created']
+
+    def __str__(self) -> str:
+        return f'Комментарий от {self.author} к {self.post}'

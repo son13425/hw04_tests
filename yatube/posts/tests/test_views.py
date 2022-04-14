@@ -1,8 +1,12 @@
 import math
+import shutil
+import tempfile
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from yatube.settings import NUMBER_OF_POSTS_PER_PAGE
@@ -13,6 +17,11 @@ from ..models import Group, Post
 User = get_user_model()
 
 
+# Создаем временную папку для медиа
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostPagesTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -29,16 +38,37 @@ class PostPagesTests(TestCase):
             slug='test-slug2',
             description='Тестовое описание 2',
         )
+        cls.small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=cls.small_gif,
+            content_type='image/gif'
+        )
         cls.post1 = Post.objects.create(
             author=cls.author,
             text='Тестовый пост',
             group=cls.group,
+            image=cls.uploaded,
         )
         cls.post = Post.objects.create(
             author=cls.author,
             text='Тестовый пост 2 группы',
             group=cls.group2,
+            image=cls.uploaded,
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        # удаляем временную папку с медиа
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         self.guest_client = Client()
@@ -104,9 +134,11 @@ class PostPagesTests(TestCase):
                 post_author_0 = first_object.author.username
                 post_group_0 = first_object.group.title
                 post_text_0 = first_object.text
+                post_image_0 = first_object.image.name
                 self.assertEqual(post_author_0, self.author.username)
                 self.assertEqual(post_group_0, self.group2.title)
                 self.assertEqual(post_text_0, self.post.text)
+                self.assertEqual(post_image_0, self.post.image)
 
     def test_post_detail_page_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
@@ -125,12 +157,17 @@ class PostPagesTests(TestCase):
             post.group.title,
             self.group2.title
         )
+        self.assertEqual(
+            post.image.name,
+            self.post.image
+        )
 
     def test_create_post_page_show_correct_context(self):
         """Шаблон create_post сформирован с правильным контекстом."""
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.fields.ChoiceField,
+            'image': forms.fields.ImageField,
         }
         url_ff = {
             reverse('posts:post_create'): form_fields,

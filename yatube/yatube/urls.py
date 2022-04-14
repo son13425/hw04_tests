@@ -3,8 +3,11 @@
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.2/topics/http/urls/
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+
 
 urlpatterns = [
     path('', include('posts.urls', namespace='posts')),
@@ -15,4 +18,10 @@ urlpatterns = [
 ]
 
 
-handler404 = "yatube.views.page_not_found_view"
+handler404 = 'core.views.page_not_found'
+
+
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
+    )

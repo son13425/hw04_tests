@@ -5,6 +5,7 @@ import tempfile
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -251,3 +252,46 @@ class PaginatorViewsTests(TestCase):
                     len(response.context['page_obj']),
                     list
                 )
+
+
+class CacheViewsTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='noname')
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        self.group = Group.objects.create(
+            title='Тестовая группа',
+            slug='test-slug',
+            description='Тестовое описание',
+        )
+
+    def test_cache_index_page(self):
+        """На странице index работает кеширование данных."""
+        # кеш очищен
+        cache.clear()
+        # пост создан
+        post = Post.objects.create(
+            author=self.user,
+            text='Тестовый пост',
+            group=self.group,
+        )
+        # запрос
+        response = self.authorized_client.get(reverse('posts:index'))
+        # получен контент
+        objects = response.content
+        # удален пост
+        post.delete()
+        # второй запрос
+        response1 = self.authorized_client.get(reverse('posts:index'))
+        # получен контент
+        objects1 = response1.content
+        # проверка наличия поста
+        self.assertEqual(objects, objects1)
+        # кеш очищен
+        cache.clear()
+        # третий запрос
+        response2 = self.authorized_client.get(reverse('posts:index'))
+        # получен контент
+        objects2 = response2.content
+        # проверка отсутствия поста
+        self.assertNotEqual(objects, objects2)

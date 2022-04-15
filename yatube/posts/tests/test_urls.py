@@ -100,7 +100,7 @@ class PostURLTests(TestCase):
                 kwargs={'post_id': self.post.id}
             ): 'posts/post_detail.html',
             reverse('posts:post_create'): 'posts/create_post.html',
-            '/unexisting_page/': '404.html',
+            '/unexisting_page/': 'core/404.html',
         }
         for address, template in urls_template.items():
             with self.subTest(template=template):

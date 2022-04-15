@@ -2,16 +2,16 @@
 {% load thumbnail %}
 
 {% block title %}
-  Последние обновления на сайте
+  Лента подписок
 {% endblock %}
 
 {% block content %}
   {% load cache %}
   {% cache 20 index_page with page_obj %}
   <!-- класс py-5 создает отступы сверху и снизу блока -->
-  <div class="container py-5">
+  <div class="container py-5">     
     {% include 'posts/includes/switcher.html' %}
-    <h1>Последние обновления на сайте</h1>
+    <h1>Лента подписок</h1>
     <article>
       {% for post in page_obj %}
         <ul>
@@ -44,7 +44,8 @@
         {% if not forloop.last %}<hr>{% endif %}
       {% endfor %}
     </article>
-    {% endcache %}
+    <!-- под последним постом нет линии -->
     {% include 'posts/includes/paginator.html' %}
   </div>
+  {% endcache %}
 {% endblock %}

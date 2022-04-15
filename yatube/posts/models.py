@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-
+from django.db.models.constraints import UniqueConstraint
 
 User = get_user_model()
 
@@ -96,3 +96,26 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         return f'Комментарий от {self.author} к {self.post}'
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Пользователь, который подписывается',
+        help_text='Пользователь, который подписывается'
+    )
+
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Автор, на которого подписываются',
+        help_text='Автор, на которого подписываются'
+    )
+
+    class Meta:
+        UniqueConstraint(fields=['user', 'aythor'], name='unique_following')
+
+    def __str__(self) -> str:
+        return f'Подписка {self.user} на посты {self.author}'

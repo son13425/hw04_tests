@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from yatube.settings import NUMBER_OF_POSTS_PER_PAGE
 
 from .forms import PostForm, CommentForm
-from .models import Group, Post, User
+from .models import Group, Post, User, Follow
 
 
 User = get_user_model()
@@ -47,17 +47,22 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.author_posts.all()
     count = posts.count()
+    following = request.user.is_authenticated and author.following.exists()
     context = {
         'author': author,
         'posts': posts,
         'count': count,
+        'following': following,
     }
     context.update(method_paginator(posts, request))
     return render(request, template, context)
 
 
 def post_detail(request, post_id):
-    form = CommentForm(request.POST or None, files=request.FILES or None)
+    form = CommentForm(
+        request.POST or None,
+        files=request.FILES or None
+    )
     template = 'posts/post_detail.html'
     post = get_object_or_404(Post, id=post_id)
     count = post.author.author_posts.count()
@@ -73,7 +78,10 @@ def post_detail(request, post_id):
 
 @login_required
 def post_create(request):
-    form = PostForm(request.POST or None, files=request.FILES or None)
+    form = PostForm(
+        request.POST or None,
+        files=request.FILES or None
+    )
     if form.is_valid():
         post = form.save(commit=False)
         post.author = request.user
@@ -113,3 +121,41 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
+def follow_index(request):
+    template = 'posts/follow.html'
+    posts =  Post.objects.filter(
+        author__following__user=request.user
+    )
+    context = {
+        'posts': posts,
+    }
+    context.update(method_paginator(posts, request))
+    return render(request, template, context)
+
+
+@login_required
+def profile_follow(request, username):
+    author = get_object_or_404(User, username=username)
+    if author == request.user:
+        return redirect('posts:profile', request.user.username)
+    follower = Follow.objects.filter(
+        user=request.user,
+        author=author
+    ).exists()
+    if follower is True:
+        return redirect('posts:profile', request.user.username)
+    Follow.objects.create(user=request.user, author=author)
+    return redirect('posts:profile', request.user.username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    author = get_object_or_404(User, username=username)
+    if author == request.user:
+        return redirect('posts:profile', request.user.username)
+    following = get_object_or_404(Follow, user=request.user, author=author)
+    following.delete()
+    return redirect('posts:profile', request.user.username)
